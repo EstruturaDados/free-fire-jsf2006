@@ -13,7 +13,8 @@ typedef struct{
 Item Mochila[10];
 
 int quant = 0; // contador global de item
-int remover = 999; // numero do item removido, só faz um.
+char nome_do_item_removido[30] = "TESTE";
+char resposta[2];
 void limpaentrada(){
     char entrada;
     while(
@@ -21,27 +22,35 @@ void limpaentrada(){
     );
 }
 
-void pesquisa(){
+int pesquisa(char nomeitem[30]){
     system("clear");
+    char item[30];
     if(quant == 0){
         printf("Não há itens na mochila ou nenhum foi cadastrado!\n");
-        return;
+        return 0;
     }
-    
-    char nomeitem[50];
-    printf("Que item você deseja procurar?\n");
-    scanf("%[^\n]", nomeitem);
-    limpaentrada();
 
-    for(int i = 0; i < 10; i++){ // busca linear simples
-        if(strncmp(nomeitem, Mochila[i].nome, sizeof(nomeitem)) == 0){
-            printf("O item está no slot %d.\n", i + 1);
+    if(strcmp(nomeitem, "PESQUISAMANUAL") == 0){ // verificando se é uma pesquisa manual, ou pesquisa como função
+    printf("Que item você deseja procurar?\n");
+    scanf("%[^\n]", item);
+    limpaentrada();
+    for(int i = 0; i < 10; i++){
+        if(strcmp(item, Mochila[i].nome) == 0){
+            printf("O item está no slot %d. (%s)\n", i + 1, Mochila[i].nome);
         }else{
-            printf("Não está no slot %d.\n", i + 1);
+            printf("Não está no slot %d. (%s)\n", i + 1, Mochila[i].nome);
         }
     }
+
+    }
+    for(int i = 0; i < 10; i++){ // busca linear simples - como função
+        if(strcmp(nomeitem, Mochila[i].nome) == 0){
+            return i;
+        }
+    }
+
     usleep(500000);
-    return;
+    return -1;
 }
 
 void cadastrodeitem(){
@@ -50,10 +59,12 @@ void cadastrodeitem(){
     char temp[50];
     if(quant != 0){
         printf("Já existem itens cadastrados, você tem certeza de que quer recadastrar todos os itens?\n");
-        // insert pergunta
+        scanf("%[^\n]", resposta);
+        if(strcmp(resposta, "N") == 0 || strcmp(resposta, "n") == 0){
+            return;
+        }
     }
 
-    if(remover != 999){
 
     for(int i = 0; i < 10; i++){ // busca linear simples, copiada do pesquisa
         if(strncmp("NULL", Mochila[i].nome, 20) == 0){
@@ -81,7 +92,7 @@ void cadastrodeitem(){
             }
         }
     }
-    }
+    
 
     
     printf("Quantos itens você quer cadastrar? (No máximo 10 itens.)\n");
@@ -119,25 +130,32 @@ void vermochila(){
         printf("Item #%d: %d\n", i + 1, Mochila[i].quantidade);
         printf("------------\n");
     }
-    printf("Pressione enter para sair da visualização.");
+    printf("Pressione 1 e enter para sair da visualização.");
     scanf("%*d");
     system("clear");
 }
 
-void removeritem(){
+void removeritem(){ // oops, era por nome.
     system("clear");
     if(quant == 0){
         printf("Não há itens na mochila!!\n");
         return;
     }
-    printf("Qual item você quer remover?\n");
-    scanf("%d", &remover);
-    remover--;
-    strcpy(Mochila[remover].nome, "NULL"); // troca o nome do item com NULL, poderia ser "removido" também.
-    strcpy(Mochila[remover].tipo, "NULL");
-    Mochila[remover].quantidade = 0;
-    remover++; // meio irresponsável fazer isso, mas é pra ter o numero certo qnd for mostrar na tela.
-    printf("Item #%d removido! Este espaço do inventário foi liberado e pode ser cadastrado outro item em seu lugar.\n", remover);
+
+    printf("Qual o nome do item que você quer remover?\n");
+    scanf("%[^\n]", nome_do_item_removido);
+    
+    int numremover = 0;
+    numremover = pesquisa(nome_do_item_removido);
+
+    if(numremover == -1){
+        printf("Item não encontrado.");
+    }
+    strcpy(Mochila[numremover].nome, "NULL"); // troca o nome do item com NULL, poderia ser "removido" também.
+    strcpy(Mochila[numremover].tipo, "NULL");
+    Mochila[numremover].quantidade = 0;
+    
+    printf("Item #%d (%s) removido! Este espaço do inventário foi liberado e pode ser cadastrado outro item em seu lugar.\n", numremover, nome_do_item_removido);
     usleep(500000);
 }
 
@@ -195,7 +213,7 @@ int main(){
 
             case 3:
                 limpaentrada();
-                pesquisa();
+                pesquisa("PESQUISAMANUAL");
             break;
 
             case 4:
@@ -215,7 +233,7 @@ int main(){
             break;
         }
     }while(saida == 1);
-    
+
     system("clear");
     return 0;
 }
